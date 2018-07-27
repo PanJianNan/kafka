@@ -1,10 +1,10 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
+ * contributor license agreements. See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * the License. You may obtain a copy of the License at
  *
  *    http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -26,22 +26,24 @@ import static org.junit.Assert.assertTrue;
 
 public class HeartbeatTest {
 
-    private long timeout = 300L;
-    private long interval = 100L;
+    private int sessionTimeoutMs = 300;
+    private int heartbeatIntervalMs = 100;
+    private int maxPollIntervalMs = 900;
+    private long retryBackoffMs = 10L;
     private MockTime time = new MockTime();
-    private Heartbeat heartbeat = new Heartbeat(timeout, interval, -1L);
+    private Heartbeat heartbeat = new Heartbeat(sessionTimeoutMs, heartbeatIntervalMs, maxPollIntervalMs, retryBackoffMs);
 
     @Test
     public void testShouldHeartbeat() {
         heartbeat.sentHeartbeat(time.milliseconds());
-        time.sleep((long) ((float) interval * 1.1));
+        time.sleep((long) ((float) heartbeatIntervalMs * 1.1));
         assertTrue(heartbeat.shouldHeartbeat(time.milliseconds()));
     }
 
     @Test
     public void testShouldNotHeartbeat() {
         heartbeat.sentHeartbeat(time.milliseconds());
-        time.sleep(interval / 2);
+        time.sleep(heartbeatIntervalMs / 2);
         assertFalse(heartbeat.shouldHeartbeat(time.milliseconds()));
     }
 
@@ -64,7 +66,7 @@ public class HeartbeatTest {
     public void testResetSession() {
         heartbeat.sentHeartbeat(time.milliseconds());
         time.sleep(305);
-        heartbeat.resetSessionTimeout(time.milliseconds());
+        heartbeat.resetTimeouts(time.milliseconds());
         assertFalse(heartbeat.sessionTimeoutExpired(time.milliseconds()));
     }
 }
